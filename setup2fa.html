@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org/">
+<head>
+    <meta charset="utf-8">
+    <title>Setup 2FA</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="setup-2fa-form">
+        <h2>Scan the QR Code with Google Authenticator</h2>
+        
+        <!-- Display the QR Code as an image -->
+        <img th:src="'data:image/png;base64,' + ${qrCode}" alt="QR Code" style="width: 200px; height: 200px;">
+        
+        <!-- 
+        <p>Secret Key: <span th:text="${secret}"></span></p> -->
+        
+        <!-- Instructions for the User -->
+        <p>Open the Google Authenticator app, scan the QR code, and then enter the OTP here to complete setup.</p>
+        
+        <!-- OTP Input Form -->
+        <form th:action="@{/verifyOTP}" method="post">
+            <div class="field">
+                <label for="otp">OTP:</label>
+                <input type="text" id="otp" name="otp" required>
+            </div>
+            <button type="submit">Verify OTP</button>
+        </form>
+    </div>
+</body>
+</html>

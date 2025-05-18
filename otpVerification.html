@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org/">
+<head>
+    <meta charset="utf-8">
+    <title>Verify OTP</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="otp-verification-form">
+        <h2>Enter OTP from Google Authenticator</h2>
+        <form th:action="@{/verifyOTP}" method="post">
+            <div class="field">
+                <label for="otp">OTP:</label>
+                <input type="text" id="otp" name="otp" required>
+            </div>
+            <button type="submit">Verify OTP</button>
+        </form>
+
+        <!-- Error message section -->
+        <div th:if="${error}" class="error-message">
+            <p th:text="${error}" style="color: red;"></p>
+        </div>
+    </div>
+</body>
+</html>

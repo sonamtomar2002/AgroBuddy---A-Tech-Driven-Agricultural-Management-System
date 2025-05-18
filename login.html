@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:th="https://www.thymeleaf.org/">
+   <head>
+      <meta charset="utf-8">
+      <title>CHATBOT</title>
+      <link rel="icon" type="image/jpeg" href="css/logoc.jpeg">
+      <link rel="stylesheet" href="css/style.css">
+      <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+   </head>
+   <body>
+      <div class="login-form">
+         <div class="text">
+            <img src="css/chatbotlogo.jpeg" alt="Logo" style="width: 150px; height: auto; border-radius:10px;">
+         </div>
+
+         <!-- Login Form -->
+         <form th:action="@{/userLogin}" th:object="${user}" method="post">
+            <div class="field">
+               <div class="fas fa-user-circle"></div>
+               <input type="text" placeholder="Username" class="form-control" th:field="*{uname}">
+            </div>
+            <div class="field">
+               <div class="fas fa-lock"></div>
+               <input type="password" placeholder="Password" class="form-control" th:field="*{password}">
+            </div>
+            <button type="submit" class="btn btn-success">LOGIN</button>
+         </form>
+
+         <!-- Error message section -->
+         <div th:if="${error}" class="error-message">
+            <p th:text="${error}" style="color: red;"></p>
+         </div>
+
+         <!-- OTP Verification Form (only displayed when 2FA is enabled) -->
+         <div th:if="${is2faRequired}">
+         <p>2FA is enabled for your account. Please scan the QR code with your authenticator app.</p>
+            <!-- QR Code and OTP Input Form will be displayed -->
+            <div th:if="${qrCode}">
+                <h3>Scan the QR code to link your Google Authenticator app:</h3>
+                <img th:src="'data:image/png;base64,' + ${qrCode}" alt="QR Code" style="width: 200px; height: 200px;">
+                <p>Secret Key: <span th:text="${secret}"></span></p>
+            </div>
+         
+            <form th:action="@{/verifyOTP}" method="post">
+               <div class="field">
+                  <label for="otp">Enter OTP from Google Authenticator:</label>
+                  <input type="text" id="otp" name="otp" placeholder="Enter OTP" required>
+               </div>
+               <button type="submit" class="btn btn-success">VERIFY OTP</button>
+            </form>
+         </div>
+      </div>
+   </body>
+</html>

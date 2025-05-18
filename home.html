@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<!-- Created By shivani -->
+<html lang="en" dir="ltr" xmlns:th="https://www.thymeleaf.org/">
+<head>
+    <meta charset="utf-8">
+    <title>CHATBOT</title>
+    <link rel="icon" type="image/jpeg" href="css/logoc.jpeg">
+    <link rel="stylesheet" href="css/custom.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+</head>
+<body>
+<div>
+    <a href="#" id="logout" class="logout-icon" style="position: absolute; top: 10px; right: 10px;" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+</div>
+<div th:if="${isAdmin}">
+    <!-- Side navigation -->
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="#" onclick="openCreateUserModal()">Create User</a>
+        <a href="#" onclick="openViewUserModal()">View User</a>
+        <a href="#" onclick="openUserLogModal()">User Log</a> <!-- Updated link for user log -->
+        <!-- Add more links for admin functionality -->
+    </div>
+
+    <!-- Open side navigation button -->
+    <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span>
+</div>
+
+<!-- Chat container -->
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <!-- Chat messages will be appended here -->
+    </div>
+    <div class="input-container">
+        
+        
+ <!-- File upload button between send and message input -->
+        <input type="file" id="file-input" class="file-input" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.txt" title="Attach Document" multiple >
+        <button id="upload-button">Upload</button>
+        <!-- Add a custom label to show selected file names -->
+<!-- <div id="file-names-display"></div> -->
+        
+        <input id="message-input" placeholder="Type your message here...">
+        <button onclick="sendMessage()">Send</button>
+        
+        <!-- New div for trash icon -->
+        <div class="trash-icon-container">
+            <i id="rotate-left-icon" class="fa-solid fa-rotate-left" title="Undo"></i>
+            <i id="delete-all-icon" class="fa-regular fa-trash-can" title="Clear All"></i>
+            <i id="rotate-right-icon" class="fa-solid fa-rotate-right" title="Redo"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Create User -->
+<div id="createUserModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCreateUserModal()">&times;</span>
+        <h2>Create User</h2>
+        <input type="text" id="uname" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="createUser()">Create</button>
+    </div>
+</div>
+
+<!-- Modal for View User -->
+<div id="viewUserModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeViewUserModal()">&times;</span>
+        <h2>View User</h2>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>S.No.</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <!-- User data will be appended here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for User Log -->
+<div id="userLogModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeUserLogModal()">&times;</span>
+        <h2>User Log</h2>
+        <table id="userLogTable">
+            <thead>
+                <tr>
+                    <th>S.No.</th>
+                    <th>Username</th>
+                    <th>User Login</th>
+                    <th>User Logout</th>
+                </tr>
+            </thead>
+            <tbody id="userLogTableBody">
+                <!-- User log data will be appended here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Script for opening and closing the side navigation and modal -->
+<script>
+    function openNav() {
+        document.getElementById("mySidenav").style.width = "250px";
+    }
+
+    function closeNav() {
+        document.getElementById("mySidenav").style.width = "0";
+    }
+
+    function openCreateUserModal() {
+        document.getElementById('createUserModal').style.display = "block";
+    }
+
+    function closeCreateUserModal() {
+        document.getElementById('createUserModal').style.display = "none";
+    }
+    
+    function openViewUserModal() {
+        document.getElementById('viewUserModal').style.display = "block";
+        fetch('/viewUsers') // Endpoint to fetch user data
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            return response.json();
+        })
+        .then(data => populateUserTable(data))
+        .catch(error => console.error('Error fetching user data:', error));
+    }
+
+    function closeViewUserModal() {
+        document.getElementById('viewUserModal').style.display = "none";
+    }
+    
+    function openUserLogModal() {
+        document.getElementById('userLogModal').style.display = "block";
+        fetch('/userLogs') // Endpoint to fetch user log data
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user log data');
+            }
+            return response.json();
+        })
+        .then(data => populateUserLogTable(data))
+        .catch(error => console.error('Error fetching user log data:', error));
+    }
+
+    function closeUserLogModal() {
+        document.getElementById('userLogModal').style.display = "none";
+    }
+
+    function populateUserTable(users) {
+        var userTableBody = document.getElementById('userTableBody');
+        userTableBody.innerHTML = '';
+        users.forEach(function(user, index) {
+            var row = userTableBody.insertRow();
+            var snoCell = row.insertCell(0);
+            var unameCell = row.insertCell(1);
+            var passwordCell = row.insertCell(2);
+            snoCell.textContent = index + 1;
+            unameCell.textContent = user.uname;
+            passwordCell.textContent = user.password;
+        });
+    }
+
+    function populateUserLogTable(userLogs) {
+        var userLogTableBody = document.getElementById('userLogTableBody');
+        userLogTableBody.innerHTML = '';
+        userLogs.forEach(function(log, index) {
+            var row = userLogTableBody.insertRow();
+            var snoCell = row.insertCell(0);
+            var unameCell = row.insertCell(1);
+            var loginCell = row.insertCell(2);
+            var logoutCell = row.insertCell(3);
+            snoCell.textContent = index + 1;
+            unameCell.textContent = log.uname; // Adjust according to your JSON structure
+            
+            // Format login time
+            var formattedLoginTime = formatDateTime(log.lastLogin);
+            loginCell.textContent = formattedLoginTime;
+
+            // Format logout time
+            var formattedLogoutTime = formatDateTime(log.lastLogout);
+            logoutCell.textContent = formattedLogoutTime;
+        });
+    }
+
+    function formatDateTime(dateTimeString) {
+        var date = new Date(dateTimeString);
+        var formattedDateTime = date.toLocaleString('en-IN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            fractionalSecondDigits: 3 // To get milliseconds
+        });
+        return formattedDateTime.replace(',', ''); // Remove comma from time
+    } 
+    
+   function sendMessage() {
+        var messageInput = document.getElementById('message-input');
+        var messageText = messageInput.value;
+
+        if (messageText !== '') {
+            appendMessage('user', messageText); // Add user message to chat box
+
+            // Send the query to the backend, which will store it and fetch from the external API
+            fetchQueryFromApi(messageText);
+
+            // Clear the input field after sending the message
+            messageInput.value = '';
+        }
+    }
+
+    function appendMessage(sender, message) {
+        var chatBox = document.getElementById('chat-box');
+        var messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message');
+        if (sender === 'user') {
+            messageDiv.classList.add('user');
+        }
+        messageDiv.innerHTML = '<p>' + message + '</p>';
+        chatBox.appendChild(messageDiv);
+
+        // Scroll to the bottom of the chat box to show the latest message
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    ///////////////
+  
+    
+     // Array to hold all selected files
+var allSelectedFiles = [];
+
+// Handle the file input change event and show file info in chat box
+document.getElementById('file-input').addEventListener('change', handleFileSelect);
+
+function handleFileSelect(event) {
+    var chatBox = document.getElementById('chat-box');
+    
+    // Iterate through each selected file and add to the array of selected files
+    Array.from(event.target.files).forEach(file => {
+        // Add the new file to the allSelectedFiles array
+        allSelectedFiles.push(file);
+
+        // Create a new message div for displaying the file in the chat box
+        var messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message', 'file-attachment');
+        messageDiv.innerHTML = `<p><strong>File Selected:</strong> ${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>`;
+
+        // Append the new file message to the chat box
+        chatBox.appendChild(messageDiv);
+    });
+
+    // Scroll to the bottom of the chat box to show the latest file
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Handle the file upload when the upload button is clicked
+document.getElementById('upload-button').addEventListener('click', handleFileUpload);
+
+function handleFileUpload() {
+    // Check if there are any files selected
+    if (allSelectedFiles.length === 0) {
+        alert('Please select at least one file to upload.');
+        return;
+    }
+
+    // Prepare the form data for sending to the server
+    var formData = new FormData();
+    // Append each selected file to the form data
+    allSelectedFiles.forEach(file => {
+        formData.append('documents', file);
+    });
+
+    // Make sure to remove the 'no-cors' mode to allow proper handling of the response
+    fetch('http://10.199.207.92:5000/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json()) // Expect JSON response
+    .then(data => {
+        if (data.message === 'Documents processed successfully') {
+            alert('Files uploaded successfully');
+            // Optionally, reset the selected files array after successful upload
+            allSelectedFiles = [];  // Clear the array after successful upload
+        } else {
+            alert('Failed to upload files');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading file:', error);
+        alert('Error uploading file');
+    });
+}
+
+
+    function fetchQueryFromApi(query) {
+        // Send the query to the backend, which will store it and fetch from the external API
+        fetch('/api/query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query: query })  // Sending the query to the backend
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.response) {
+                appendMessage('bot', data.response); // Append bot's response
+            } else {
+                appendMessage('bot', 'Sorry, I did not get a valid response from the server.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            appendMessage('bot', 'Sorry, something went wrong.');
+        });
+    }   
+ 
+
+    
+    
+    
+    
+ document.getElementById('message-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    function adminFunction() {
+        // Functionality for admin
+        alert("Admin functionality executed!");
+    }
+
+    function createUser() {
+        var uname = document.getElementById('uname').value;
+        var password = document.getElementById('password').value;
+
+        fetch('/createUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ uname: uname, password: password })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("New user created with uname: " + uname);
+                closeCreateUserModal();
+            } else {
+                throw new Error('Failed to create user');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function storeMessage(message) {
+        var messageText = message;
+
+        // Fetch the username dynamically from sessionStorage
+        var username = getUsername();
+
+        var currentTime = new Date().toISOString(); // Get current time in ISO 8601 format
+        fetch('/api/storeSearch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, searchTerm: messageText, searchTime: currentTime })
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Message stored successfully:', messageText);
+                // Optionally handle success message
+            } else {
+                throw new Error('Failed to store message');
+            }
+        })
+        .catch(error => {
+            console.error('Error storing message:', error);
+        });
+    }
+
+    function getUsername() {
+        return sessionStorage.getItem('username'); // Retrieve username from session storage
+    }
+
+    // Example login function where you set the username in session storage
+    function loginUser(username, password) {
+        // Perform login operation and upon success
+        sessionStorage.setItem('username', username);
+        // Redirect or update UI as needed
+    }
+
+    document.getElementById('logout').addEventListener('click', function () {
+        // Display a confirmation box
+        if (confirm("Are you sure you want to logout?")) {
+            // If user confirms, proceed with logout
+            fetch('/logout', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to the login page after logout
+                    window.location.href = '/';
+                } else {
+                    throw new Error('Failed to logout');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+
+    // Function to handle clicking on the trash icon to delete all queries
+    document.getElementById('delete-all-icon').addEventListener('click', function() {
+        if (confirm('Are you sure you want to delete all queries?')) {
+            // Perform deletion action here
+            deleteAllQueries();
+        }
+    });
+
+    // Function to delete all queries
+    function deleteAllQueries() {
+        fetch('/api/deleteAllQueries', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('All queries deleted successfully.');
+                // Optionally update UI or show success message
+                // Clear chat box or reload messages
+                clearChatBox();
+            } else {
+                throw new Error('Failed to delete queries');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting queries:', error);
+        });
+    }
+
+    // Function to clear the chat box (example)
+    function clearChatBox() {
+        var chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = ''; // Clearing the chat box content
+    }
+    
+    // Initialize variables for managing state and history
+    var messageInput = document.getElementById('message-input');
+    var chatBox = document.getElementById('chat-box');
+    var messageHistory = [];
+    var currentMessageIndex = -1;
+
+    // Function to handle text input event (save state)
+    messageInput.addEventListener('input', function() {
+        saveState();
+    });
+
+    // Function to save the current state of the message input
+    function saveState() {
+        var currentState = messageInput.value;
+        messageHistory.push(currentState);
+        currentMessageIndex = messageHistory.length - 1;
+        updateButtonStates();
+    }
+
+    // Function to update button states (enable/disable based on history index)
+    function updateButtonStates() {
+        document.getElementById('rotate-left-icon').disabled = (currentMessageIndex <= 0);
+        document.getElementById('rotate-right-icon').disabled = (currentMessageIndex >= messageHistory.length - 1);
+    }
+
+    // Event listeners for undo and redo buttons
+    document.getElementById('rotate-left-icon').addEventListener('click', undo);
+    document.getElementById('rotate-right-icon').addEventListener('click', redo);
+
+    // Function to handle undo operation
+    function undo() {
+        if (currentMessageIndex > 0) {
+            currentMessageIndex--;
+            var previousState = messageHistory[currentMessageIndex];
+            messageInput.value = previousState;
+            updateButtonStates();
+        }
+    }
+
+    // Function to handle redo operation
+    function redo() {
+        if (currentMessageIndex < messageHistory.length - 1) {
+            currentMessageIndex++;
+            var nextState = messageHistory[currentMessageIndex];
+            messageInput.value = nextState;
+            updateButtonStates();
+        }
+    }
+
+    // Example event listener for Enter key press to send message
+    messageInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+</script>
+</body>
+</html>
